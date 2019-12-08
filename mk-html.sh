@@ -1,1 +1,1 @@
- for i in bool nat du sigma pi w ps ut id Fred-idPM ; do agda --html $i.agda ; done
+ for i in `ls *agda` ; do agda --html $i ; done
