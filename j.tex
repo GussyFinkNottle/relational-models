@@ -1,0 +1,58 @@
+\documentclass[mathserif,notitlepage]{beamer}
+\begin{document}
+
+\newcommand{\Set}{\mathit{set}}
+\newcommand{\Rel}{\mathit{rel}}
+
+\begin{frame}
+
+\frametitle{Source judgements} 
+These occur as premises and conclusions of \emph{to-be-interpreted} rules.
+$$
+  \begin{array}{l @{\hspace{1ex}:\hspace{1ex}}l|l}
+    A(x^{}_{1},\ldots,x_n) & 
+    \Set & (\Gamma )
+\\[1em]
+    a(x^{}_1,\ldots,x^{}_n) & A(x^{}_1,\ldots,x^{}_n) & (\Gamma) \\ 
+  \end{array}
+$$
+Common dimension-$n$ context: 
+$$  \Gamma = x^{}_1 : A^{}_1,\ldots,x^{}_n : A^{}_n (x^{}_1,\ldots,x_{n-1})
+$$
+
+(Plus equational forms.)
+\end{frame}
+
+\begin{frame}
+\frametitle{Judgements used to interpret them} % Companions
+These occur as premises and conclusions in \emph{interpreting} rules.
+$$
+  \begin{array}{@{}l}
+    A^*(x^{}_1,x'_{1},x^*_{1},\ldots,x^{}_n,x'_n,x^*_n) : \Rel(A(x^{}_1,\ldots,x^{}_n),A(x'_1,\ldots,x'_n)) 
+    \\[1em] %& \Gamma' \\
+    a^*(x^{}_1,x'_1,x^*_1,\ldots,x^{}_n,x'_n,x^*_n) : \begin{array}[t]{@{}l}A^*(x^{}_1,x'_1,x^*_1,\ldots,x^{}_n,x'_n,x^*_n) \\
+    ( a(x^{}_1,\ldots,x^{}_n)       
+    , a(x'_1,\ldots,x'_n))         \end{array}
+%    & \Gamma'
+  \end{array}
+$$
+Common dimension-$3n$ context:
+$$
+\Gamma'^* =  
+(\begin{array}[t]{l}
+x^{}_1 : A^{}_1 , x'_1 : A^{}_1 , x^*_1:A^*_1(x^{}_1,x'_1), \\ 
+\ldots \\
+\begin{array}[t]{@{}l}
+x^{}_n : A^{}_n  (x^{}_1,\ldots,x_{n-1}) ,   \\
+x'_n : A^{}_n (x'_1,\ldots,x'_{n-1}) , \\
+x^*_n : A^*_n (x^{}_1,x'_1,x^*_1,\ldots,x^{}_{n-1},x'_{n-1},x^*_{n-1})(x^{}_n,x'_n) \; ) 
+\end{array}          
+\end{array}          
+$$
+where   $ rel(A, B) \; = \; A \to B \to Set $.
+\end{frame}
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
