@@ -1,14 +1,13 @@
 module _ where
 
-  {- Fred edited a confused draft by me, which is more-or-less this. -}
+  {- Fred edited a confused draft by me, resulting in more-or-less this. -}
 
   rel : (A A' : Set) -> Set₁
   rel A A' = A -> A' -> Set
   pow : Set -> Set₁
   pow A = A -> Set
-  -- rel A A' = A -> pow A'
 
-  -- Christine Paulin-Mohring style (singleton predicate). Maybe simpler. Incomplete.
+  -- Christine Paulin-Mohring style (singleton predicate). Maybe simpler. 
   module idPM (A : Set) (a : A) where
 
     data fmPM : pow A where   inPM : fmPM a 
