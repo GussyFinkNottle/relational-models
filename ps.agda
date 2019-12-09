@@ -1,28 +1,32 @@
 module _ where
+  pow : Set -> Set₁
+  pow A = A -> Set
+  rel : (_ _ : Set) -> Set₁
+  rel A B = A -> pow B
 
   module ps (A : Set)
-            (B : A -> Set)
-            (C : (x : A)-> B x -> Set)
+            (B : pow A) 
+            (C : (x : A)-> pow (B x)) 
             (d : (x : A)-> (y : B x)-> C x y -> A) where
 
     data fm : A -> Set where
       intro : (x : A) -> (y : B x) -> (f : (z : C x y) -> fm (d x y z) ) -> fm x
 
-    ex : { H : (x : A) -> (t : fm x) -> Set }->
+    ex : { H : (x : A) -> pow (fm x) }-> 
          ( c : (x : A) -> (y : B x)-> (f : (z : C x y) → fm (d x y z)) ->
                ( (z : C x y)-> H (d x y z) (f z) ) -> H x (intro x y f)
          ) -> 
          (x : A)-> (t : fm x) -> H x t
     ex {C} c _ (intro x y f) = c x y f (λ z → ex {C} c (d x y z) (f z))
 
-  module ps* ( A : Set ) ( A' : Set ) ( A* : A -> A' -> Set )
-             ( B : A -> Set ) ( B' : A' -> Set )
-             ( B* : (a : A) -> (a' : A') -> A* a a' -> B a -> B' a' -> Set )
-             ( C  : (a : A)-> B a -> Set )
-             ( C' : (a' : A')-> B' a' -> Set )
+  module ps* ( A : Set ) ( A' : Set ) ( A* : rel A A') 
+             ( B : pow A)( B' : pow A')  
+             ( B* : (a : A) -> (a' : A') -> A* a a' -> rel (B a) (B' a') ) 
+             ( C  : (a : A)-> pow (B a)) 
+             ( C' : (a' : A')-> pow (B' a') ) 
              ( C* : (a : A) -> (a' : A') -> (a* : A* a a') ->
                     ( b : B a) -> (b' : B' a') -> B* a a' a* b b' ->
-                    C a b -> C' a' b' -> Set )
+                    rel (C a b) (C' a' b') ) 
              ( d  : (a : A) -> (b : B a)-> C a b -> A)
              ( d' : (a' : A') -> (b' : B' a')-> C' a' b' -> A')
              ( d* : (a : A) -> (a' : A') -> (a* : A* a a') ->
@@ -33,7 +37,7 @@ module _ where
     open ps A B C d public 
     open ps A' B' C' d' public renaming (fm to fm'; intro to intro' ; ex to ex') 
 
-    data fm* : (a : A) -> (a' : A') -> A* a a' -> fm a -> fm' a' -> Set where
+    data fm* : (a : A) -> (a' : A') -> A* a a' -> rel (fm a) (fm' a')   where 
       intro* : (a : A) -> (a' : A') -> (a* : A* a a') ->
                (b : B a) -> (b' : B' a') -> (b* : B* a a' a* b b') ->
                (f : (c : C a b) -> fm (d a b c)) ->    
@@ -42,7 +46,7 @@ module _ where
                      fm* (d a b c) (d' a' b' c') (d* a a' a* b b' b* c c' c*) (f c) (f' c')) ->
                fm* a a' a* (intro a b f) (intro' a' b' f')
 
-    ex* : {K : (a : A)-> (a' : A') -> (a* : A* a a') -> (z : fm a) -> (z' : fm' a') -> fm* a a' a* z z' -> Set}
+    ex* : {K : (a : A)-> (a' : A') -> (a* : A* a a') -> (z : fm a) -> (z' : fm' a') -> pow (fm* a a' a* z z')} 
           (k : (a : A)-> (a' : A') -> (a* : A* a a')->
                (b : B a)->(b' : B' a')-> (b* : B* a a' a* b b')->
                (f  : (z : C a b) → fm (d a b z)) ->
@@ -58,11 +62,11 @@ module _ where
           = k a a' a* b b' b* f f' f*
             (λ c c' c* → ex* {K} k (d a b c) (d' a' b' c') (d* a a' a* b b' b* c c' c*) (f c) (f' c') (f* c c' c*))
 
-  module ps-in-model ( A : Set ) ( A* : A -> A -> Set )
-                     ( B : A -> Set ) ( B* : (a a' : A)-> A* a a' -> B a -> B a' -> Set ) 
-                     ( C  : (a : A)-> B a -> Set )
+  module ps-in-model ( A : Set ) ( A* : rel A A)  
+                     ( B : pow A ) ( B* : (a a' : A)-> A* a a' -> rel (B a) (B a'))  
+                     ( C  : (a : A)-> pow (B a) )
                      ( C* : (a : A) -> (a' : A) -> (a* : A* a a') ->
-                            (b : B a) -> (b' : B a') → B* a a' a* b b' → C a b → C a' b' → Set)
+                            (b : B a) -> (b' : B a') → B* a a' a* b b' → rel (C a b) (C a' b')) 
                      ( d  : (a : A) -> (b : B a)-> C a b -> A)
                      ( d* : (a : A) -> (a' : A) -> (a* : A* a a') ->
                             (b : B a) -> (b' : B a') -> (b* : B* a a' a* b b')->
@@ -71,9 +75,9 @@ module _ where
     where
 
     open ps* A A A* B B B* C C C* d d d* public
-    module _ (H : (a : A) -> (t : fm a) -> Set)
+    module _ (H : (a : A) -> pow (fm a))  
              (H* : (a a' : A) (a* : A* a a') (t : fm a) (t' : fm a') (t* : fm* a a' a* t t') ->
-                   (H a t ) -> (H a' t') -> Set
+                   rel (H a t) (H a' t')  
              )
              ( s : (a : A) -> (b : B a)-> (f : (c : C a b) → fm (d a b c)) ->
                (g : (c : C a b)-> H (d a b c) (f c))-> H a (intro a b f) )
@@ -96,7 +100,7 @@ module _ where
       where
         h : (a : A) -> (t : fm a) → H a t
         h = ex {H} s
-        M :  (a a' : A) (a* : A* a a') (t : fm a) (t' : fm a') (t* : fm* a a' a* t t') -> Set
+        M :  (a a' : A) (a* : A* a a') (t : fm a) (t' : fm a') -> pow (fm* a a' a* t t') 
         M a a' a* t t' t*   = H* a a' a* t t' t* (h a t) (h a' t')
         m : (a a' : A) (a* : A* a a')
             (b : B a) (b' : B a') (b* : B* a a' a* b b')
