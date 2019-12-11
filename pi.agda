@@ -43,7 +43,7 @@ module pi where
         where
     open pi A B public 
     open pi A' B' public renaming (fm to fm'; mk to mk' ; ex to ex'; at to at' ; eta to eta'; etaAlt to etaAlt')
-                         hiding (id ; chir ; d )
+                         -- hiding (id ; chir ; d )
     data fm* : fm -> fm' -> Set where
       mk* : ( b : (a : A)-> B a )->
                ( b' : (a' : A') -> B' a' ) ->

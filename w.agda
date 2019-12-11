@@ -1,11 +1,18 @@
 module _ where
 
+  open import combinators
+  {-
+  pow : Set -> Set₁
+  pow A = A -> Set
+  rel : (_ _ : Set) -> Set₁
+  rel A B = A -> pow B
+  -}
   module w (A : Set) (B : A -> Set) where
 
     data fm : Set where
       mk : (a : A) -> (B a -> fm) -> fm
 
-    ex : { C : fm -> Set }->
+    ex : { C : pow fm }->
          ( c : (a : A)-> (f : B a -> fm) -> ((b : B a)-> C (f b)) -> C (mk a f) ) -> 
          (z : fm) -> C z
     ex {C} c (mk a f) = c a f (λ b → ex {C} c (f b)) 
@@ -19,20 +26,20 @@ module _ where
     eta : {X : fm -> fm -> Set}-> ((z : fm) -> X z z) -> (z : fm) -> X z (mk (pi0 z) (pi1 z))
     eta r = ex (λ a f _ → r (mk a f)) 
 
-  module w*  ( A : Set ) ( A' : Set ) ( A* : A -> A' -> Set )
+  module w*  ( A : Set ) ( A' : Set ) ( A* : rel A A') 
              ( B : A -> Set ) ( B' : A' -> Set )
-             ( B* : (a : A) -> (a' : A') -> A* a a' -> B a -> B' a' -> Set )
+             ( B* : (a : A) -> (a' : A') -> A* a a' -> rel (B a) (B' a') )
     where
     open w A B public 
     open w A' B' public renaming (fm to fm'; mk to mk' ; ex to ex' ; pi0 to pi0' ; pi1 to pi1' ; eta to eta') 
     
-    data fm* : fm -> fm' -> Set where
+    data fm* : rel fm fm' where
       mk* : (a : A) (a' : A') (a* : A* a a') ->
                (f : B a -> fm) (f' : B' a' -> fm') ->
                (f* : (b : B a) (b' : B' a') (b* : B* a a' a* b b') -> fm* (f b) (f' b'))
                -> fm* (mk a f) (mk' a' f') 
 
-    ex* : {D : (z : fm) (z' : fm') -> fm* z z' -> Set }->
+    ex* : {D : (z : fm) (z' : fm') -> pow (fm* z z') }-> 
           (d : (a : A) -> (a' : A') -> (a* : A* a a') ->
                 (f : B a -> fm) -> (f' : B' a' -> fm') ->
                 (f* : (b : B a) -> (b' : B' a') -> (b* : B* a a' a* b b') -> fm* (f b) (f' b')) ->
@@ -45,17 +52,17 @@ module _ where
        = d a a' a* f f' f*
            λ b b' b* → ex* {D} d (f b) (f' b') (f* b b' b*)
 
-  module w-simple ( A : Set) (A* : A -> A -> Set)
+  module w-simple ( A : Set) (A* : rel A A)   -- discard A' and B' stuff
                   ( B : A -> Set) (B* : (a a' : A) -> A* a a' -> B a -> B a' -> Set)
     where
       open w A B public
-      data fm* : fm -> fm -> Set where
+      data fm* : rel fm fm where
         mk* : (a a' : A) (a* : A* a a') ->
                  (f : B a -> fm) (f' : B a' -> fm) ->
                  (f* : (b : B a) (b' : B a') (b* : B* a a' a* b b') -> fm* (f b) (f' b'))
                -> fm* (mk a f) (mk a' f') 
 
-      ex* : {D : (z z' : fm) -> fm* z z' -> Set}->
+      ex* : {D : (z z' : fm) -> pow (fm* z z') }-> 
             (d : (a a' : A) -> (a* : A* a a') ->
                  (f : B a → fm)-> (f' : B a' → fm) ->
                  (f* : (b : B a) (b' : B a') → B* a a' a* b b' → fm* (f b) (f' b')) ->
@@ -70,13 +77,13 @@ module _ where
            λ b b' b* → ex* {D} d (f b) (f' b') (f* b b' b*)
         
 
-  module w-in-model ( A : Set ) ( A* : A -> A -> Set )
-                    ( B : A -> Set ) ( B* : (a a' : A)-> A* a a' -> B a -> B a' -> Set )
+  module w-in-model ( A : Set ) ( A* : rel A A) 
+                    ( B : A -> Set ) ( B* : (a a' : A)-> A* a a' -> rel (B a) (B a')) 
     where
     open w-simple A A* B B* public
  -- open w* A A A* B B B* public
-    module _ (C : fm -> Set)
-             (C* : (z z' : fm)-> (z* : fm* z z')-> C z -> C z' -> Set)
+    module _ (C : pow fm)
+             (C* : (z z' : fm)-> (z* : fm* z z')-> rel (C z) (C z'))
              (c : (a : A)-> (f : B a -> fm) -> ((b : B a)-> C (f b)) -> C (mk a f))
              (c* : (a a' : A) (a* : A* a a') (f : B a → fm) (f' : B a' → fm)
                    (f* : (b : B a) (b' : B a') → B* a a' a* b b' → fm* (f b) (f' b')) →
@@ -88,7 +95,7 @@ module _ where
              ) where
           h : (z : fm) -> C z
           h = ex {C} c
-          D : (z z' : fm)-> (z* : fm* z z')-> Set
+          D : (z z' : fm)-> pow (fm* z z')
           D z z' z* = C* z z' z* (h z) (h z')
           d : (a a' : A) (a* : A* a a') (f : B a → fm) (f' : B a' → fm)
                 (f* : (b : B a) (b' : B a') → B* a a' a* b b' → fm* (f b) (f' b')) →
