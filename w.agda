@@ -52,7 +52,7 @@ module _ where
        = d a a' a* f f' f*
            λ b b' b* → ex* {D} d (f b) (f' b') (f* b b' b*)
 
-  module w-simple ( A : Set) (A* : rel A A)   -- discard A' and B' stuff
+  module w-simple ( A : Set) (A* : rel A A)   -- discard A' and B' stuff.
                   ( B : A -> Set) (B* : (a a' : A) -> A* a a' -> B a -> B a' -> Set)
     where
       open w A B public

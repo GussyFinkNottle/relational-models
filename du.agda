@@ -13,25 +13,46 @@ module du where
     ex _  c₁ (i₁ b) = c₁ b                -- computation 1
 
     open import bool
-    open import sigma
+         renaming (fm to Two ; mk₀ to 0₂ ; mk₁ to 1₂ ; ex to elim₂)
+    open import sigma -- renaming (fm to Σ)
+    open sigma.fm public -- renaming (fm to Σ)
+    Σ : (A : Set) -> (A → Set) → Set
+    Σ = sigma.fm
+    σ : {A : Set}{B : A -> Set} -> (a : A) → B a → Σ A B -- (λ z → B z) 
+    σ = sigma.mk 
 
-    d : fm -> bool.fm
-    d = ex (λ _ → bool.mk₀) λ _ → bool.mk₁
+    d : fm -> Two -- bool.fm
+    d = ex (λ _ → 0₂) (λ _ → 1₂)
     {- todo .. something about eta ... -}
-    dd₁ : (z : fm) -> sigma.fm bool.fm (λ x → bool.EX A B x)
-    dd₁ = ex {λ _ → sigma.fm bool.fm (bool.EX A B)}
-             (sigma.mk bool.mk₀) (sigma.mk bool.mk₁ ) 
-    dd₂ :  sigma.fm bool.fm (λ x → bool.EX A B x) -> fm
-    dd₂ =  sigma.ex bool.fm (bool.EX A B) (bool.ex i₀ i₁)
-    eta : {X : (_ _ : fm)-> Set} -> ((z : fm)-> X z z) ->  
-          (z : fm) -> X z (dd₂ (dd₁ z)) 
-    eta r = ex (λ a → r (i₀ a)) λ b → r (i₁ b)
+    dd₁ : (z : fm) -> Σ Two (EX A B) -- sigma.fm bool.fm (λ x → bool.EX A B x)
+    dd₁ = ex {λ _ → Σ Two (EX A B) } -- sigma.fm bool.fm (bool.EX A B)}
+             (σ 0₂) (σ 1₂) -- (sigma.mk bool.mk₀) (sigma.mk bool.mk₁ ) 
+    dd₂ :  Σ Two (EX A B) -> fm
+    dd₂ =  let h : (a : Two) (b : EX A B a) → fm
+               h = elim₂ {λ z → EX A B z → fm} i₀ i₁
+            in sigma.ex Two (EX A B) h -- (bool.ex i₀ i₁) -- reconstitute the du thing
+    eta : {X : (_ _ : fm)-> Set} -> (r : (z : fm)-> X z z) ->  
+          (z : fm) -> X z (dd₂ (dd₁ z))   -- dd₂ left inverse of dd₁ 
+    eta {X} r = ex {λ z → X z (dd₂ (dd₁ z))}
+                   (λ a → r (i₀ a))
+                   (λ b → r (i₁ b))
+    eta' : let T = Σ Two (EX A B) in
+          {X : (_ _ : T) -> Set} -> (r : (z : T)-> X z z) ->  
+          (z : sigma.fm Two (EX A B)) -> X z (dd₁ (dd₂ z))   -- dd₂ left inverse of dd₁ 
+    eta' {X} r = let
+                     h1 : (b : A) → X (mk 0₂ b) (dd₁ (dd₂ (mk 0₂ b)))
+                     h1 a = r (mk 0₂ a)
+                     h2 : (b : B) -> X (mk 1₂ b) (dd₁ (dd₂ (mk 1₂ b)))
+                     h2 b = r (mk 1₂ b) 
+                     h : (a : Two) (b : EX A B a) → X (mk a b) (dd₁ (dd₂ (mk a b)))
+                     h = elim₂ h1 h2
+                  in sigma.ex Two (EX A B) h
 
   module du* (A : Set) (A' : Set) (A* : A → A' → Set)
              (B : Set) (B' : Set) (B* : B → B' → Set) where
     open du A  B  public
-    open du A' B' public renaming (fm to fm' ; i₀ to i₀' ; i₁ to i₁' ; ex to ex')
-                         hiding (d ; dd₁ ; dd₂ ; eta)
+    open du A' B' public renaming (Σ to Σ' ; σ to σ' ; fm to fm' ; i₀ to i₀' ; i₁ to i₁' ; ex to ex')
+                         hiding (d ; dd₁ ; dd₂ ; eta ; eta')
 
     data fm* : fm → fm' →  Set  where
        i₀* : (a : A) → (a' : A') → (a* : A* a a') → fm* (i₀ a) (i₀' a') 

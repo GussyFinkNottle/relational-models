@@ -7,10 +7,10 @@ module _ where
   pow : Set -> Set₁
   pow A = A -> Set
 
-  -- Christine Paulin-Mohring style (singleton predicate). Maybe simpler. 
+  -- Christine Paulin-Mohring style (singleton predicate). Maybe simpler.
   module idPM (A : Set) (a : A) where
 
-    data fmPM : pow A where   inPM : fmPM a 
+    data fmPM : pow A where   inPM : fmPM a
 
     exPM : {C : (b : A) -> pow (fmPM b) }->
            C a inPM -> (b : A) -> (ab : fmPM b) -> C b ab
@@ -19,7 +19,7 @@ module _ where
   module idPM* (A : Set) (A' : Set) (A* : rel A A')        -- NB heterogeneous
                (a : A) (a' : A') (a* : A* a a') where
     open idPM A  a  public    -- pull in introduction rules.
-    open idPM A' a' public    -- pull in (')variants. 
+    open idPM A' a' public    -- pull in (')variants.
          renaming (fmPM to fmPM' ; inPM to inPM' ; exPM to exPM')
 
     data fmPM* : (b : A) (b' : A') (b* : A* b b') -> rel (fmPM b) (fmPM' b') where

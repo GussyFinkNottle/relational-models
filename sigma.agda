@@ -1,5 +1,7 @@
 module _ where 
 
+  open import combinators
+
   module sigma (A : Set) (B : A -> Set) where
 
     data fm : Set where                 -- formation
@@ -24,10 +26,9 @@ module _ where
 
 -- Extension of standard type-theory with which we interpret sigma rules.
 
-  module sigma* (A : Set) (A' : Set)
-             ( A* : A -> A' -> Set )
+  module sigma* (A : Set) (A' : Set) ( A* : rel A A')
              ( B : A -> Set ) ( B' : A' -> Set )
-             ( B* : (a : A) -> (a' : A') -> A* a a' -> B a -> B' a' -> Set )
+             ( B* : (a : A) -> (a' : A') -> A* a a' -> rel (B a) (B' a') ) 
         where
     open sigma A B public 
     open sigma A' B' public renaming (fm to fm'; mk to intro' ; ex to ex'; pi0 to pi0' ; pi1 to pi1' ; eta to eta')
@@ -49,12 +50,12 @@ module _ where
     ex* {D} d _ _ (intro* a b a' b' a* b*) = d a b a' b' a* b* 
 
   module sigma-in-model
-           (A : Set )       (A* : A -> A -> Set)
-           (B : A -> Set)   (B* : (a a' : A)-> A* a a' -> B a -> B a' -> Set)
+           (A : Set )       (A* : rel A A) 
+           (B : A -> Set)   (B* : (a a' : A)-> A* a a' -> rel (B a) (B a'))
          where
     open sigma* A A A* B B B* public hiding (fm' ; intro' ; ex') 
     module _ (C : fm -> Set)
-             (C* : (z z' : fm)-> (z* : fm* z z')-> C z -> C z' -> Set)   -- C, in the model
+             (C* : (z z' : fm)-> (z* : fm* z z')-> rel (C z) (C z') )
              (c : (a : A)-> (b : B a)-> C (mk a b))
              (c* : (a : A)-> (b : B a) -> (a' : A)-> (b' : B a')->                       -- c in the model (??)
                    (a* : A* a a')-> (b* : B* a a' a* b b' )->
