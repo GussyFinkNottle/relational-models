@@ -3,13 +3,18 @@ module pi where
   module pi (A : Set) (B : A -> Set) where  -- cf sigma module at end of this file
 
     data fm : Set where                   -- formation
-      mk :  ((a : A)-> B a) -> fm      -- introduction
+      mk :  (b : (a : A)-> B a) -> fm     -- introduction
 
     ex : { C : fm -> Set }->              -- elimination
          ( (b : (a : A) -> B a) -> C (mk b) )->
          ( z : fm )-> C z
     ex c (mk b) = c b                  -- computation
 
+    Ex : { D : Set₁ }->                -- large version: mere iterator (no dependency).
+         (d : (b : (a : A)-> B a) -> D )->
+         (z : fm) -> D
+    Ex d (mk x) = d x
+    
     {- examples of use of ex -}
 
     -- flip of application (argument before function)
@@ -43,7 +48,7 @@ module pi where
         where
     open pi A B public 
     open pi A' B' public renaming (fm to fm'; mk to mk' ; ex to ex'; at to at' ; eta to eta'; etaAlt to etaAlt')
-                         -- hiding (id ; chir ; d )
+                         hiding (id ; Ex )
     data fm* : fm -> fm' -> Set where
       mk* : ( b : (a : A)-> B a )->
                ( b' : (a' : A') -> B' a' ) ->
@@ -60,7 +65,7 @@ module pi where
           ( z : fm ) -> (z' : fm') -> (z* : fm* z z') -> D z z' z*
     ex* {D} d _ _ (mk* b b' b*) = d b b' b* -- blanks are (mk b) and (intro' b')
 
-    -- application respects equality
+    -- application respects relations in each argument.
     at* : (a : A) -> (a' : A') -> (a* : A* a a') ->
           (z : fm) -> (z' : fm') -> fm* z z' ->
           B* a a' a* (at a z) (at' a' z')

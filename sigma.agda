@@ -12,32 +12,55 @@ module _ where
          ( z : fm ) -> C z
     ex c (mk a b) = c a b               -- computation
 
+    Ex : { D : Set₁ }->
+         (c : (a : A) -> B a -> D) -> fm -> D
+    Ex c (mk a x) = c a x 
+
+    record fmr : Set where
+      constructor dp
+      field
+        i  : A
+        ii : B i 
+
     pi0 : fm -> A
     pi0 = ex (λ a _ → a) 
 
     pi1 : (z : fm) -> B (pi0 z)
-    pi1 = ex (λ _ b → b) 
+    pi1 = ex (λ _ b → b)
+
+    blah : fm -> fmr
+    blah x = record { i = pi0 x ; ii = pi1 x }
+    blah- : fmr -> fm
+    blah- x = mk (fmr.i x) (fmr.ii x) 
 
     eta : {X : fm -> fm -> Set}->         -- pairing is Leibnitzically surjective
           ((a : fm) -> X a a) ->
           (z : fm) -> X z (mk (pi0 z) (pi1 z)) 
     eta {X} r  = ex {λ z → X z (mk (pi0 z) (pi1 z))} -- needn't be explicit
                     (λ a b → r (mk a b))
+                    
+    eta# : {X : fmr -> fmr -> Set}->
+           ((x : fmr)-> X x x)->
+           (x : fmr) -> X x (blah (blah- x))
+    eta# {X} r = r -- λ x → r x 
 
--- Extension of standard type-theory with which we interpret sigma rules.
+-- Enrichment of the standard type-theory rules
+-- with an inductive definition of a binary relation
+-- between the elements of the standard type. two which we interpret sigma rules.
 
   module sigma* (A : Set) (A' : Set) ( A* : rel A A')
              ( B : A -> Set ) ( B' : A' -> Set )
              ( B* : (a : A) -> (a' : A') -> A* a a' -> rel (B a) (B' a') ) 
         where
     open sigma A B public 
-    open sigma A' B' public renaming (fm to fm'; mk to intro' ; ex to ex'; pi0 to pi0' ; pi1 to pi1' ; eta to eta')
-
+    open sigma A' B' public renaming (fm to fm'; mk to mk' ; ex to ex' ; pi0 to pi0' ; pi1 to pi1' ; eta to eta')
+                            hiding (fmr; blah ;blah- ; eta# ; Ex)
+                            
     data fm* : fm -> fm' -> Set where
       intro* : (a : A) -> ( b : B a )->
                (a' : A') -> ( b' : B' a' ) ->
                (a* : A* a a') -> B* a a' a* b b' 
-               -> fm* (mk a b) (intro' a' b')  
+               -> fm* (mk a b) (mk' a' b')  
 
     ex* : { D : (z : fm) -> (z' : fm') -> fm* z z' -> Set }->
           ( d : (a : A)-> (b : B a) ->               -- maybe reorder d's arguments for clarity
@@ -53,7 +76,7 @@ module _ where
            (A : Set )       (A* : rel A A) 
            (B : A -> Set)   (B* : (a a' : A)-> A* a a' -> rel (B a) (B a'))
          where
-    open sigma* A A A* B B B* public hiding (fm' ; intro' ; ex') 
+    open sigma* A A A* B B B* public hiding (fm' ; mk' ; ex') 
     module _ (C : fm -> Set)
              (C* : (z z' : fm)-> (z* : fm* z z')-> rel (C z) (C z') )
              (c : (a : A)-> (b : B a)-> C (mk a b))
