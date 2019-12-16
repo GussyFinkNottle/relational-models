@@ -1,13 +1,8 @@
 module _ where
 
   open import combinators
-  {-
-  pow : Set -> Set₁
-  pow A = A -> Set
-  rel : (_ _ : Set) -> Set₁
-  rel A B = A -> pow B
-  -}
-  module w (A : Set) (B : A -> Set) where
+
+  module w (A : Set) (B : pow A) where
 
     data fm : Set where
       mk : (a : A) -> (B a -> fm) -> fm
@@ -22,6 +17,15 @@ module _ where
     pi0 = ex {λ _ → A} (λ a _ _ → a)
     pi1 : (z : fm) -> B (pi0 z) -> fm 
     pi1 = ex {λ x → B (pi0 x)-> fm} (λ _ f _ → f)
+    pt : pow fm -> pow fm
+    pt P z = ( t : B (pi0 z)) -> P (pi1 z t)
+    
+    data Acc : pow fm where
+      mka : (z : fm)-> pt Acc z -> Acc z
+    acc : (z : fm)-> Acc z  -- all elements of a W-type are accessible in this sense.
+    acc z = let h : (a : A) (f : B a → fm) -> ((b : B a) → Acc (f b)) → Acc (mk a f)
+                h a f = mka (mk a f) 
+             in ex h z 
 
     eta : {X : fm -> fm -> Set}-> ((z : fm) -> X z z) -> (z : fm) -> X z (mk (pi0 z) (pi1 z))
     eta r = ex (λ a f _ → r (mk a f)) 
@@ -32,7 +36,7 @@ module _ where
     where
     open w A B public 
     open w A' B' public renaming (fm to fm'; mk to mk' ; ex to ex' ; pi0 to pi0' ; pi1 to pi1' ; eta to eta') 
-    
+                        hiding (pt ; Acc ; acc)
     data fm* : rel fm fm' where
       mk* : (a : A) (a' : A') (a* : A* a a') ->
                (f : B a -> fm) (f' : B' a' -> fm') ->

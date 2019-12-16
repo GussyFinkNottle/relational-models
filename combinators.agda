@@ -13,8 +13,10 @@
     -- exchange arguments of a binary function,
     -- combinator C = (*) * (^) ^ (*)
     -- C a = (^) * a ^ (*)
-    flip : {X : Set}{Y : Set}{Z : rel X Y} →
-           ((x : X) (y : Y) → Z x y) → (y : Y)(x : X) → Z x y
+    flip : {X : Set}{Y : Set}{Z : rel Y X} →
+           (f : (y : Y) (x' : X) → Z y x')
+           (x : X)
+           (y : Y) → Z y x
     flip f x y = f y x
     
     -- combinator K
@@ -26,7 +28,7 @@
     zero _ = id 
 
     -- e₁ postcomposed to e₂ (ie. e₁ ∘ e₂), combinator B = (^) * (*) ^ (*)
-    comp : {X : Set}{Y : Set}{Z : pow Y} → (g : (y : Y) → Z y) → (f : X → Y) → (x : X) → Z (f x)
+    comp : {X : Set}{Y : Set}{Z : pow Y} → (e₁ : (y : Y) → Z y) → (e₂ : X → Y) → (x : X) → Z (e₂ x)
     comp e₁ e₂ x = e₁ (e₂ x)
 
     -- flip application. (Church encoding of the "1-tuple": cf "pair").
@@ -34,21 +36,26 @@
     power : {B : Set}{E : pow B} → (b : B) → (e : (b' : B) → E b') → E b
     power b e = e b
 
+    -- pairing combinator, (,). Extension of power to binary functions.
+    -- pair = (*) * (*) * (^) ^ (*)
+    pair : {A : Set}-> {B : pow A}-> {C : (a : A) -> pow (B a)}->
+           (a : A)-> (b : B a) -> (c : (a' : A)-> (b' : B a')-> C a' b') -> C a b
+    pair a b c = c a b
+    -- flip of pairing (,)^(~)
+    pair~ : {A : Set}-> {B : Set}-> {C : rel B A}->
+           (a : A)-> (b : B) -> (c : (b' : B)-> (a' : A)-> C b a) -> C b a
+    pair~ a b c = c b a
+
     private Cont : (_ _ : Set) -> Set
             Cont r a = (a -> r) -> r
     private join : {r a : Set}-> Cont r (Cont r a) -> Cont r a
-            -- join m k = power (power k) m -- m (power k)
             join = flip (comp power power)                           -- ((^) * (^)) ^ (~) in AMEN
-    private map : {r a b : Set}-> (a -> b) -> Cont r a -> Cont r b   {- 
-            map f ca k -- = ca (flip comp f k) -- (comp k f) -- (λ a → k (f a))
-                       = comp ca (flip comp f) k
-                       = flip comp (flip comp f) ca k                -}
-            map = comp (flip comp) (flip comp)                       -- (*) * (*) in AMEN notation
+    private map : {r a b : Set}-> (a -> b) -> Cont r a -> Cont r b  
+            map  = comp (flip comp) (flip comp)                      -- (*) * (*) in AMEN notation
 
     -- e₁ precomposed to e₂. (flip comp)
-    times : {X : Set}{Y : Set} -> 
+    times : {X : Set}{Y : Set}{ Z : pow Y} -> 
             (f : X → Y) →
-            {Z : pow Y} →
             (g : (y : Y) → Z y) → (x : X) → Z (f x)
     times e₁ e₂ b = power (power b e₁) e₂
 
@@ -60,11 +67,6 @@
              (b : B) → X b → Z b
     plus e₁ e₂ b  = times (power b e₁) (power b e₂)
 
-   -- pairing combinator, (,). Extension of exp to binary functions.
-   -- pair = (*) * (*) * (^) ^ (*)
-    pair : {A : Set}-> {B : pow A}-> {C : (a : A) -> pow (B a)}->
-           (a : A)-> (b : B a) -> (c : (a' : A)-> (b' : B a')-> C a' b') -> C a b
-    pair a b c = c a b 
 
     -- combinator W
     -- W = flip ((^) + (^))
