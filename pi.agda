@@ -1,3 +1,4 @@
+open import combinators
 
 module pi where 
   module pi (A : Set) (B : A -> Set) where  -- cf sigma module at end of this file
@@ -13,7 +14,7 @@ module pi where
     Ex : { D : Set₁ }->                -- large version: mere iterator (no dependency).
          (d : (b : (a : A)-> B a) -> D )->
          (z : fm) -> D
-    Ex d (mk x) = d x
+    Ex d (mk b) = d b
     
     {- examples of use of ex -}
 
@@ -24,22 +25,15 @@ module pi where
 
     -- "propositional" eta, Leibnitz'd to avoid identity type ...
     eta : {X : fm -> fm -> Set}->
-          ( (z : fm)-> X z z )->
+          (r : (z : fm)-> X z z )->
           (z : fm)-> X z (mk λ a → at a z)
     eta -- {X}
             r = ex -- {λ z → X z (mk (λ x → at x z))}
                    (λ b → r (mk b))
 
-    -- a local definition just for the sake of subtleties about etaAlt, following
-    private id : {X : Set}-> X -> X
-            id x = x
-
     etaAlt : (X : fm -> Set)->     -- a bit more Leibnitzic
           (z : fm)-> X z -> X (mk λ a → at a z) 
-    etaAlt X = ex -- { λ z → X z -> X (mk (λ a → at a z)) }
-                  -- (λ _ → id) -- this is actually the combinator 'zero'
-                  (λ _ → id {X (mk _)}) -- this is actually the combinator 'zero'
-                  -- λ b → id {X (mk b)} -- {X (mk (λ a → at a (mk b)))}
+    etaAlt X = ex λ b → id {X (mk b)} 
 
   module pi* ( A : Set ) ( A' : Set ) 
              ( A* : A -> A' -> Set )
@@ -48,7 +42,7 @@ module pi where
         where
     open pi A B public 
     open pi A' B' public renaming (fm to fm'; mk to mk' ; ex to ex'; at to at' ; eta to eta'; etaAlt to etaAlt')
-                         hiding (id ; Ex )
+                         hiding (Ex )
     data fm* : fm -> fm' -> Set where
       mk* : ( b : (a : A)-> B a )->
                ( b' : (a' : A') -> B' a' ) ->
