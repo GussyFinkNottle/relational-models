@@ -4,6 +4,8 @@ module _ where
 
   module s (A : Set)  where
 
+   -- I would/should call fm "S A", mk₀ "o", and (mk₁ a) "s a".
+
     data fm : Set where
       mk₀ : fm
       mk₁ : A → fm 
