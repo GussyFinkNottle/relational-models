@@ -73,18 +73,19 @@ module _ where
     open w A' B' public renaming (fm to fm'; mk to mk' ; ex to ex' ; Ex to Ex' ; pi0 to pi0' ; pi1 to pi1' ; eta to eta') 
                         hiding (pt ; Acc ; acc )
     data fm* : rel fm fm' where
-      mk* : (a : A) (a' : A') (a* : A* a a') →
-               (f : B a → fm) (f' : B' a' → fm') →
+      mk* : (a : A) (a' : A') (a* : A* a a') -- →
+               (f : B a → fm) (f' : B' a' → fm') -- →
                (f* : (b : B a) (b' : B' a') (b* : B* a a' a* b b') → fm* (f b) (f' b'))
                → fm* (mk a f) (mk' a' f') 
 
     ex* : {D : (z : fm) (z' : fm') → pow (fm* z z') }→ 
-          (d : (a : A) → (a' : A') → (a* : A* a a') →
-                (f : B a → fm) → (f' : B' a' → fm') →
-                (f* : (b : B a) → (b' : B' a') → (b* : B* a a' a* b b') → fm* (f b) (f' b')) →
+          (d : (a : A) (a' : A') (a* : A* a a') -- →
+                (f : B a → fm) (f' : B' a' → fm') -- →
+                (f* : (b : B a) (b' : B' a') → B* a a' a* b b' → fm* (f b) (f' b')) →
                 ( (b  : B a) (b' : B' a') (b* : B* a a' a* b b') → D (f b) (f' b') (f* b b' b*) 
                 ) →
-                D (mk a f) (mk' a' f') (mk* a a' a* f f' f*)) →
+                D (mk a f) (mk' a' f') (mk* a a' a* f f' f*)
+          ) -- →
           (z : fm) (z' : fm') (z* : fm* z z') →
           D z z' z*
     ex* {D} d (mk' a f) (mk' a' f') (mk* a a' a* f f' f*)
